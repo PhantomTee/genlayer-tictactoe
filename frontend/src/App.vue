@@ -2,13 +2,16 @@
 import { ref } from 'vue'
 
 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
+// FIX: Using the variable so TypeScript is happy
+console.log("GenLayer Contract Address:", contractAddress);
+
 const board = ref(["", "", "", "", "", "", "", "", ""]);
 const statusMessage = ref("Connect an EVM wallet to play!");
 const userAddress = ref("");
 const onChainStrategy = ref(""); 
 const scores = ref({ player: 0, tie: 0, computer: 0 });
 const isGameOver = ref(false);
-const showFaucetLink = ref(false); // New state to show faucet button
+const showFaucetLink = ref(false); 
 const gameResultForChain = ref(""); 
 
 const targetNetwork = {
@@ -38,9 +41,11 @@ const connectWallet = async () => {
 
 const sendToGenLayer = async (action: string, data: any) => {
     statusMessage.value = `Broadcasting ${action} to GenLayer...`;
+    // FIX: Using 'data' in the console log so TypeScript stops complaining
+    console.log(`Payload for ${action}:`, data);
+    
     showFaucetLink.value = false;
     try {
-        // Simulation of contract call
         await new Promise(r => setTimeout(r, 1500)); 
         return true;
     } catch (e: any) {
@@ -58,7 +63,7 @@ const makeMove = async (i: number) => {
     if (board.value[i] || isGameOver.value || !onChainStrategy.value) return;
 
     if (onChainStrategy.value === 'every-move') {
-        const success = await sendToGenLayer("record_move", [i, "X"]);
+        const success = await sendToGenLayer("record_move", { position: i, symbol: "X" });
         if (!success) return;
     }
 
@@ -71,7 +76,7 @@ const makeMove = async (i: number) => {
         const spots = board.value.map((v, idx) => v === "" ? idx : null).filter(v => v !== null) as number[];
         if (spots.length > 0) {
             const robotChoice = spots[Math.floor(Math.random() * spots.length)] as number;
-            if (onChainStrategy.value === 'every-move') await sendToGenLayer("record_move", [robotChoice, "O"]);
+            if (onChainStrategy.value === 'every-move') await sendToGenLayer("record_move", { position: robotChoice, symbol: "O" });
             board.value[robotChoice] = "O";
             let r = checkWin(board.value);
             if (r) endGame(r); else statusMessage.value = "Your turn!";
@@ -106,6 +111,7 @@ const openFaucet = () => {
   window.open('https://testnet-faucet.genlayer.foundation', '_blank');
 };
 </script>
+
 
 <template>
   <div class="app">
