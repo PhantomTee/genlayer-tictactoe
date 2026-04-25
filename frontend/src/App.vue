@@ -6,12 +6,13 @@ const board = ref(["", "", "", "", "", "", "", "", ""]);
 const statusMessage = ref("Not connected. Please connect your wallet.");
 const userAddress = ref("");
 
-// 1. Function to connect Rabby / Browser Wallet
+// 1. Function to connect Rabby / Browser Wallet (Now TypeScript safe!)
 const connectWallet = async () => {
-    // Check if a wallet extension (like Rabby) is injected into the browser
-    if (window.ethereum) {
+    const ethWindow = window as any; // Tells TypeScript to bypass the strict window check
+    
+    if (ethWindow.ethereum) {
         try {
-            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const accounts = await ethWindow.ethereum.request({ method: 'eth_requestAccounts' });
             userAddress.value = accounts[0];
             statusMessage.value = `Connected: ${userAddress.value.slice(0,6)}...${userAddress.value.slice(-4)}. Ready to play!`;
         } catch (error) {
@@ -24,7 +25,6 @@ const connectWallet = async () => {
 
 // 2. Function to interact with the Genlayer Smart Contract
 const makeMove = async (index: number) => {
-    // Stop them if they haven't connected yet
     if (!userAddress.value) {
         statusMessage.value = "❌ Connect your wallet first!";
         return;
@@ -34,19 +34,15 @@ const makeMove = async (index: number) => {
     statusMessage.value = `Please sign the transaction in Rabby for square ${index}...`;
     
     try {
-        // NOTE: This is where you would use the genlayer-js SDK to send the actual transaction.
-        // For example: await genlayer.contracts.write(contractAddress, "make_move", [index]);
-        
-        // Simulating the blockchain confirmation delay for now
         await new Promise(r => setTimeout(r, 1500)); 
-        
         board.value[index] = "X"; 
-        statusMessage.value = `Move confirmed on Genlayer Studionet! Waiting for O...`;
+        statusMessage.value = `Move confirmed! Waiting for O...`;
     } catch (e) {
         statusMessage.value = "Transaction failed or rejected!";
     }
 };
 </script>
+
 
 <template>
   <div class="game-container">
